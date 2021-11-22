@@ -64,3 +64,123 @@ print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
 print('sampling rate of audio is:',srl)
 window_size = 0.03
 hop_length = 0.03
+
+"""
+# asking window type rectangular or hamming
+while True:
+    window = input('Which window you want rectangular window (press: 1) or Hamming window (press: 2):')
+    if window == '1':
+        window = 'rect'
+        break
+    elif window == '2':
+        window = 'hamm'
+        break
+    else:
+        print('Enter valid input')
+"""
+"""
+# Plot sound wave
+plt.figure(1)
+plt.plot(np.linspace(0, librosa.get_duration(y=y, sr=srl), num=len(y)), y)
+plt.xlabel('Time')
+plt.ylabel('Amplitude')
+plt.title('Sound wave in time domain')
+plt.grid()
+"""
+
+#windowed_frames,num_frames = enframe(y, window_size, hop_length, srl, window)
+rect_window_frames,hamming_window_frames,num_frames = enframe(y, window_size, hop_length, srl)
+
+# impulse generator
+n=0
+impulse = []
+x_axis = np.arange(0, len(hamming_window_frames[0]), 1)
+for i in x_axis:
+    if i==n:
+        impulse.append(1)
+    else:
+        impulse.append(0)
+
+while True:
+    frame_number = input('Enter any frame number from 0 to {} to get its magnitude spectrum or press enter to exit: '.format(num_frames-1))
+    if not frame_number or int(frame_number)> num_frames:
+        break
+    
+    single_frame_rect = rect_window_frames[int(frame_number)]
+    single_frame_hamm = hamming_window_frames[int(frame_number)]
+    
+    p = int(srl/1000)+2 # number of poles
+    A1 = librosa.lpc(single_frame_rect , p)
+    A2 = librosa.lpc(single_frame_hamm , p)
+    
+    inverse_filter_rect = scipy.signal.lfilter([1], A1, impulse)
+    inverse_filter_hamm = scipy.signal.lfilter([1], A2, impulse)
+    
+    w1, h1 = scipy.signal.freqz(1,A1)
+    w2, h2 = scipy.signal.freqz(1,A2)
+    
+    fft_single_frame_rect = np.log10(abs(np.fft.fft(single_frame_rect)))
+    fft_single_frame_hamm = np.log10(abs(np.fft.fft(single_frame_hamm)))
+    fft_inverse_filter_rect = np.log10(abs(np.fft.fft(inverse_filter_rect)))
+    fft_inverse_filter_hamm = np.log10(abs(np.fft.fft(inverse_filter_hamm)))
+    #fft_h1 = np.log10(np.abs(h1))
+    #fft_h2 = np.log10(np.abs(h2))
+    
+    
+    fft_fre = np.fft.fftfreq(n=single_frame_hamm.size, d=1/srl)
+    fft_fre = fft_fre[0:len(fft_fre)//2]
+    #print(fft_fre)
+    
+    samples_in_frame = len(fft_inverse_filter_rect)
+    fft_single_frame_rect = fft_single_frame_rect[0:samples_in_frame//2]
+    fft_single_frame_hamm = fft_single_frame_hamm[0:samples_in_frame//2]
+    fft_inverse_filter_rect = fft_inverse_filter_rect[0:samples_in_frame//2]
+    fft_inverse_filter_hamm = fft_inverse_filter_hamm[0:samples_in_frame//2]
+    #fft_h1 = fft_h1[0:len(fft_h1)//2]
+    #fft_h2 = fft_h2[0:len(fft_h2)//2]
+    
+    peak_location_rect = librosa.util.peak_pick(fft_inverse_filter_rect,np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),0.1,10)
+    peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),0.1,10)
+    
+    peak_amplitude_rect = []
+    print('The formants in frame when rectangular window is considered are: ')
+    for i in peak_location_rect:
+        peak_amplitude_rect.append(fft_inverse_filter_rect[i])
+        print(i*(fft_fre[-1]+1))
+    peak_amplitude_rect = np.asarray(peak_amplitude_rect)
+    peak_location_rect = peak_location_rect/(samples_in_frame//2)
+    
+    peak_amplitude_hamm = []
+    print('The formants in frame when hamming window is considered are: ')
+    for i in peak_location_hamm:
+        peak_amplitude_hamm.append(fft_inverse_filter_hamm[i])
+        print(i*(fft_fre[-1]+1))
+    peak_amplitude_hamm = np.asarray(peak_amplitude_hamm)
+    peak_location_hamm = peak_location_hamm/(samples_in_frame//2)
+    
+    fft_fre = fft_fre/max(fft_fre)
+    
+    plt.figure()
+    plt.plot(fft_fre,fft_single_frame_rect)
+    plt.plot(fft_fre,fft_inverse_filter_rect)
+    plt.scatter(peak_location_rect, peak_amplitude_rect)
+    #plt.plot(w1/np.pi, fft_h1)
+    plt.title('frame number {} of rect window'.format(int(frame_number)))
+    plt.legend(['rect','lpc','peak_points'])
+    plt.xlabel('Freq in Hz')
+    plt.ylabel('Log Magnitude Spectrum')
+    plt.grid()
+    
+    plt.figure()
+    plt.plot(fft_fre,fft_single_frame_hamm)
+    plt.plot(fft_fre,fft_inverse_filter_hamm)
+    plt.scatter(peak_location_hamm, peak_amplitude_hamm)
+    #plt.plot(w2/np.pi, fft_h2)
+    plt.title('frame number {} of hamm window'.format(int(frame_number)))
+    plt.legend(['hamm','lpc','peak_points'])
+    plt.xlabel('Freq in Hz')
+    plt.ylabel('Log Magnitude Spectrum')
+    plt.grid()
+    plt.show()
+    
+    plt.pause(0.05)
