@@ -56,3 +56,11 @@ def enframe(x, winsize, hoplength, fs):
         j += 1
     """
     return rect_frames,hamming_frames, num_frames
+
+# Load data from wav file
+#Default Setting - sub-sampling to default 22,050 Hz, Explicitly Setting sr=None ensures original sampling preserved
+y, srl = librosa.load('should_we_chase.wav',sr=None)
+print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
+print('sampling rate of audio is:',srl)
+window_size = 0.03
+hop_length = 0.03
