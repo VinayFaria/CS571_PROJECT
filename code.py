@@ -55,15 +55,16 @@ def enframe(x, winsize, hoplength, fs):
             frames[j] = frames[j]*dummy
         j += 1
     """
+    
     return rect_frames,hamming_frames, num_frames
 
 # Load data from wav file
 #Default Setting - sub-sampling to default 22,050 Hz, Explicitly Setting sr=None ensures original sampling preserved
-y, srl = librosa.load('should_we_chase.wav',sr=None)
+y, srl = librosa.load(r'D:\Postgraduation\OneDrive - students.iitmandi.ac.in\Postgraduation\Semester I\Programming Practicum\Project\should_we_chase.wav',sr=None)
 print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
 print('sampling rate of audio is:',srl)
-window_size = 0.03
-hop_length = 0.03
+window_size = 0.030 #enter in seconds
+hop_length = 0.015 #enter in seconds
 
 """
 # asking window type rectangular or hamming
@@ -112,6 +113,15 @@ while True:
     p = int(srl/1000)+2 # number of poles
     #A1 = librosa.lpc(single_frame_rect , p)
     A2 = librosa.lpc(single_frame_hamm , p)
+    # Get roots.
+    rts = np.roots(A2)
+    rts = [r for r in rts if np.imag(r) >= 0]
+    # Get angles.
+    angz = np.arctan2(np.imag(rts), np.real(rts))
+
+    # Get frequencies.
+    frqs = sorted(angz * (srl / (2 * math.pi)))
+    print(frqs)
     
     #inverse_filter_rect = scipy.signal.lfilter([1], A1, impulse)
     inverse_filter_hamm = scipy.signal.lfilter([1], A2, impulse)
@@ -140,7 +150,7 @@ while True:
     #fft_h2 = fft_h2[0:len(fft_h2)//2]
     
     #peak_location_rect = librosa.util.peak_pick(fft_inverse_filter_rect,np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),0.1,10)
-    peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),0.1,10)
+    peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),0.1,10)
     
     """
     peak_amplitude_rect = []
@@ -153,10 +163,10 @@ while True:
     """
     
     peak_amplitude_hamm = []
-    print('The formants in frame when hamming window is considered are: ')
+    #print('The formants in frame when hamming window is considered are: ')
     for i in peak_location_hamm:
         peak_amplitude_hamm.append(fft_inverse_filter_hamm[i])
-        print(i*(fft_fre[-1]+1))
+        #print(i*(fft_fre[-1]+1))
     peak_amplitude_hamm = np.asarray(peak_amplitude_hamm)
     peak_location_hamm = peak_location_hamm/(samples_in_frame//2)
     peak_location_hamm = peak_location_hamm*(srl//2)
