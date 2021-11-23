@@ -60,11 +60,12 @@ def enframe(x, winsize, hoplength, fs):
 
 # Load data from wav file
 #Default Setting - sub-sampling to default 22,050 Hz, Explicitly Setting sr=None ensures original sampling preserved
+#y, srl = librosa.load(r'D:\Images\Vinay\Engineering\Postgraduation\OneDrive - students.iitmandi.ac.in\Postgraduation\Semester I\Programming Practicum\Project\should_we_chase.wav',sr=None)
 y, srl = librosa.load(r'D:\Postgraduation\OneDrive - students.iitmandi.ac.in\Postgraduation\Semester I\Programming Practicum\Project\should_we_chase.wav',sr=None)
 print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
 print('sampling rate of audio is:',srl)
-window_size = 0.030 #enter in seconds
-hop_length = 0.015 #enter in seconds
+window_size = 0.049 #enter in seconds
+hop_length = 0.01 #enter in seconds
 
 """
 # asking window type rectangular or hamming
@@ -79,7 +80,6 @@ while True:
     else:
         print('Enter valid input')
 """
-"""
 # Plot sound wave
 plt.figure(1)
 plt.plot(np.linspace(0, librosa.get_duration(y=y, sr=srl), num=len(y)), y)
@@ -87,7 +87,7 @@ plt.xlabel('Time')
 plt.ylabel('Amplitude')
 plt.title('Sound wave in time domain')
 plt.grid()
-"""
+
 
 #windowed_frames,num_frames = enframe(y, window_size, hop_length, srl, window)
 rect_window_frames,hamming_window_frames,num_frames = enframe(y, window_size, hop_length, srl)
@@ -110,9 +110,10 @@ while True:
     #single_frame_rect = rect_window_frames[int(frame_number)]
     single_frame_hamm = hamming_window_frames[int(frame_number)]
     
+    
     p = int(srl/1000)+2 # number of poles
     #A1 = librosa.lpc(single_frame_rect , p)
-    A2 = librosa.lpc(single_frame_hamm , p)
+    A2 = librosa.lpc(single_frame_hamm, p)
     # Get roots.
     rts = np.roots(A2)
     rts = [r for r in rts if np.imag(r) >= 0]
@@ -150,7 +151,7 @@ while True:
     #fft_h2 = fft_h2[0:len(fft_h2)//2]
     
     #peak_location_rect = librosa.util.peak_pick(fft_inverse_filter_rect,np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),np.ceil(samples_in_frame/20),0.1,10)
-    peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),np.ceil(samples_in_frame/10),0.1,10)
+    peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),0.1,20)
     
     """
     peak_amplitude_rect = []
@@ -192,9 +193,9 @@ while True:
     plt.scatter(peak_location_hamm, peak_amplitude_hamm)
     #plt.plot(w2/np.pi, fft_h2)
     plt.title('frame number {}'.format(int(frame_number)))
-    plt.legend(['hamm','lpc','peak_points'])
-    plt.xlabel('Freq')
-    plt.ylabel('Log Magnitude Spectrum')
+    plt.legend(['Signal Spectrum','LPC Spectrum ','peak_points'])
+    plt.xlabel('Frequency [Hz]')
+    plt.ylabel('Log Magnitude Spectrum [dB]')
     plt.grid()
     plt.show()
     
