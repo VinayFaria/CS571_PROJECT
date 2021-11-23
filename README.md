@@ -7,9 +7,9 @@ When the speech signals are analysed in frequency domain i.e. spectrum analysis 
 ## Useful links
 - [Digital Speech Processing Course by Lawrence Rabiner](https://web.ece.ucsb.edu/Faculty/Rabiner/ece259/)
 
-### Final Code
+## Final Code
 Python code can be found here [code.py](https://github.com/VinayFaria/CS571_PROJECT/blob/main/code.py)
 
-### Plots and audio files
-- Plots are available here 
-- Audio files are available here 
+## Plots and audio files
+- Audio files are available here [Audio Files](https://github.com/VinayFaria/CS571_PROJECT/tree/main/Audio%20Files)
+- Plots are available here [Plots](https://github.com/VinayFaria/CS571_PROJECT/tree/main/Plots)
