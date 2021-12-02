@@ -1,5 +1,5 @@
-# @author: vinay
-
+#=============================================================================
+# Loading library
 import librosa
 import librosa.display
 import matplotlib.pyplot as plt
@@ -7,6 +7,7 @@ import numpy as np
 import math
 import scipy
 
+#=============================================================================
 # packing audio signal samples in frames
 def enframe(x, winsize, hoplength, fs):
     # compute frame length and frame step (convert from seconds to samples)
@@ -42,46 +43,30 @@ def enframe(x, winsize, hoplength, fs):
         dummy = np.hamming(winsize)
         hamming_frames[i] = hamming_frames[i]*dummy
     
-    # checking window type and then modifying frames accordingly
-    j = 0
-    for frame in frames:
-        dummy = np.hamming(winsize)
-        hamming_frames[j] = hamming_frames[j]*dummy
-        j += 1
-    """
-    for frame in frames:
-        if wintype == 'rect':
-            pass
-        elif wintype == 'hamm':
-            dummy = np.hamming(winsize)
-            frames[j] = frames[j]*dummy
-        j += 1
-    """
-    
     return rect_frames,hamming_frames, num_frames
 
+#=============================================================================
 # Load data from wav file
-#Default Setting - sub-sampling to default 22,050 Hz, Explicitly Setting sr=None ensures original sampling preserved
-#y, srl = librosa.load(r'D:\Images\Vinay\Engineering\Postgraduation\OneDrive - students.iitmandi.ac.in\Postgraduation\Semester I\Programming Practicum\Project\should_we_chase.wav',sr=None)
-y, srl = librosa.load(r'D:\Postgraduation\OneDrive - students.iitmandi.ac.in\Postgraduation\Semester I\Programming Practicum\Project\should_we_chase.wav',sr=None)
-print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
-print('sampling rate of audio is:',srl)
+# Default Setting - sub-sampling to default 22,050 Hz, Explicitly Setting sr=None ensures original sampling preserved
+name_read = "s6"
+filename_read = "%s.wav" % name_read
+y, srl = librosa.load(filename_read,sr=10000)
+
+name_write = name_read + "_formants"
+filename_write = "%s.txt" % name_write
+file1 = open(filename_write,"w")
+file1.write("duration of audio: %s seconds \n" %librosa.get_duration(y=y, sr=srl))
+file1.write("Sampling rate of audio: %s \n" %srl)
+#print('duration of audio is:',librosa.get_duration(y=y, sr=srl))
+#print('sampling rate of audio is:',srl)
 window_size = 0.049 #enter in seconds
 hop_length = 0.01 #enter in seconds
+file1.write("window_size: %s \n" %window_size)
+file1.write("hop_length: %s \n" %hop_length)
+file1.write("\n")
+file1.write("formants are \n")
 
-"""
-# asking window type rectangular or hamming
-while True:
-    window = input('Which window you want rectangular window (press: 1) or Hamming window (press: 2):')
-    if window == '1':
-        window = 'rect'
-        break
-    elif window == '2':
-        window = 'hamm'
-        break
-    else:
-        print('Enter valid input')
-"""
+#=============================================================================
 # Plot sound wave
 plt.figure(1)
 plt.plot(np.linspace(0, librosa.get_duration(y=y, sr=srl), num=len(y)), y)
@@ -90,10 +75,11 @@ plt.ylabel('Amplitude')
 plt.title('Sound wave in time domain')
 plt.grid()
 
-
-#windowed_frames,num_frames = enframe(y, window_size, hop_length, srl, window)
+#=============================================================================
+# Calling Enframe function
 rect_window_frames,hamming_window_frames,num_frames = enframe(y, window_size, hop_length, srl)
 
+#=============================================================================
 # impulse generator
 n=0
 impulse = []
@@ -104,6 +90,58 @@ for i in x_axis:
     else:
         impulse.append(0)
 
+#=============================================================================
+# saving formants in text file
+j = 0
+for frame in hamming_window_frames:
+    p = int(srl/1000)+2 # number of poles
+    #A1 = librosa.lpc(single_frame_rect , p)
+    A2 = librosa.lpc(frame, p)
+    
+    #inverse_filter_rect = scipy.signal.lfilter([1], A1, impulse)
+    inverse_filter_hamm = scipy.signal.lfilter([1], A2, impulse)
+    
+    #fft_single_frame_rect = np.log10(abs(np.fft.fft(single_frame_rect)))
+    fft_single_frame_hamm = np.log10(abs(np.fft.fft(frame)))
+    #fft_inverse_filter_rect = np.log10(abs(np.fft.fft(inverse_filter_rect)))
+    fft_inverse_filter_hamm = np.log10(abs(np.fft.fft(inverse_filter_hamm)))
+    
+    
+    fft_fre = np.fft.fftfreq(n=frame.size, d=1/srl)
+    fft_fre = fft_fre[0:len(fft_fre)//2]
+    #print(fft_fre)
+    
+    samples_in_frame = len(fft_inverse_filter_hamm)
+    #fft_single_frame_rect = fft_single_frame_rect[0:samples_in_frame//2]
+    fft_single_frame_hamm = fft_single_frame_hamm[0:samples_in_frame//2]
+    #fft_inverse_filter_rect = fft_inverse_filter_rect[0:samples_in_frame//2]
+    fft_inverse_filter_hamm = fft_inverse_filter_hamm[0:samples_in_frame//2]
+    
+    peak_location_hamm = scipy.signal.find_peaks(fft_inverse_filter_hamm)
+    
+    peak_amplitude_hamm = []
+    #print('The formants in frame when hamming window is considered are: ')
+    for i in peak_location_hamm[0]:
+        peak_amplitude_hamm.append(fft_inverse_filter_hamm[i])
+    peak_amplitude_hamm = np.asarray(peak_amplitude_hamm)
+    peak_location_hamm = peak_location_hamm[0]/(samples_in_frame//2)
+    peak_location_hamm = peak_location_hamm*(srl//2)
+    peak_location_hamm = peak_location_hamm.tolist()
+    
+    file1.write("frame %s:" %j)
+    for i in range(len(peak_location_hamm)):
+        if i == len(peak_location_hamm)-1:
+            peak_location_hamm[i] = str(peak_location_hamm[i]) + '\n'
+        else:
+            peak_location_hamm[i] = str(peak_location_hamm[i]) + ' '
+    file1.writelines(peak_location_hamm)
+    
+    j +=1
+    
+file1.close() #to change file access modes
+
+#=============================================================================
+# Printing formants based on user input frame number
 while True:
     frame_number = input('Enter any frame number from 0 to {} to get its magnitude spectrum or press enter to exit: '.format(num_frames-1))
     if not frame_number or int(frame_number)> num_frames:
@@ -115,18 +153,6 @@ while True:
     p = int(srl/1000)+2 # number of poles
     #A1 = librosa.lpc(single_frame_rect , p)
     A2 = librosa.lpc(single_frame_hamm, p)
-    
-    """
-    # Get roots.
-    rts = np.roots(A2)
-    rts = [r for r in rts if np.imag(r) >= 0]
-    # Get angles.
-    angz = np.arctan2(np.imag(rts), np.real(rts))
-
-    # Get frequencies.
-    frqs = sorted(angz * (srl / (2 * math.pi)))
-    print(frqs)
-    """
     
     #inverse_filter_rect = scipy.signal.lfilter([1], A1, impulse)
     inverse_filter_hamm = scipy.signal.lfilter([1], A2, impulse)
@@ -158,17 +184,14 @@ while True:
     #peak_location_hamm = librosa.util.peak_pick(fft_inverse_filter_hamm,np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),np.ceil(samples_in_frame/15),0.1,20)
     
     peak_location_hamm = scipy.signal.find_peaks(fft_inverse_filter_hamm)
-    
     """
     peak_amplitude_rect = []
-    print('The formants in frame when rectangular window is considered are: ')
+    #print('The formants in frame when rectangular window is considered are: ')
     for i in peak_location_rect:
         peak_amplitude_rect.append(fft_inverse_filter_rect[i])
-        print(i*(fft_fre[-1]+1))
     peak_amplitude_rect = np.asarray(peak_amplitude_rect)
     peak_location_rect = peak_location_rect/(samples_in_frame//2)
     """
-    
     peak_amplitude_hamm = []
     #print('The formants in frame when hamming window is considered are: ')
     for i in peak_location_hamm[0]:
@@ -183,19 +206,6 @@ while True:
     #peak_amplitude_hamm = fft_inverse_filter_hamm[peak_location_hamm]
     
     #fft_fre = fft_fre/max(fft_fre)
-    
-    """
-    plt.figure()
-    plt.plot(fft_fre,fft_single_frame_rect)
-    plt.plot(fft_fre,fft_inverse_filter_rect)
-    plt.scatter(peak_location_rect, peak_amplitude_rect)
-    #plt.plot(w1/np.pi, fft_h1)
-    plt.title('frame number {} of rect window'.format(int(frame_number)))
-    plt.legend(['rect','lpc','peak_points'])
-    plt.xlabel('Freq in Hz')
-    plt.ylabel('Log Magnitude Spectrum')
-    plt.grid()
-    """
     
     plt.figure()
     plt.plot(fft_fre,fft_single_frame_hamm)
