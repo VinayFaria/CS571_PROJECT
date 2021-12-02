@@ -6,6 +6,8 @@ When the speech signals are analysed in frequency domain i.e. spectrum analysis 
 
 ## Useful links
 - [Digital Speech Processing Course by Lawrence Rabiner](https://web.ece.ucsb.edu/Faculty/Rabiner/ece259/)
+- [Relation between sampling rate and frequency range](http://www.asel.udel.edu/speech/tutorials/instrument/sam_rat.html)
+- [Linguistic Phonetics Spectral Analysis](https://ocw.mit.edu/courses/linguistics-and-philosophy/24-915-linguistic-phonetics-fall-2015/lecture-notes/MIT24_915F15_lec6.pdf)
 
 ## Final Code
 Python code can be found here [code.py](https://github.com/VinayFaria/CS571_PROJECT/blob/main/code.py)
