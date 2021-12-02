@@ -15,4 +15,8 @@ Python code can be found here [code.py](https://github.com/VinayFaria/CS571_PROJ
 
 ## Plots and audio files
 - Audio files are available here [Audio Files](https://github.com/VinayFaria/CS571_PROJECT/tree/main/Audio%20Files)
-- Plots are available here [Plots](https://github.com/VinayFaria/CS571_PROJECT/tree/main/Plots)
+- Plots are available here [Plots and Formants text file](https://github.com/VinayFaria/CS571_PROJECT/tree/main/Plots)
+
+## Limitation
+- Not work for Ill-Conditioning. Theory for Ill-Conditioning can be found [here](http://www-mmsp.ece.mcgill.ca/Documents/Reports/2003/KabalR2003a.pdf)
+- audio files s2, s3, s4, s5 and s6 are example of Ill-Conditioning for window_size = 0.049sec and hop_length = 0.01sec
